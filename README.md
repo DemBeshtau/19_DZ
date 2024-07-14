@@ -63,3 +63,33 @@ drwxr-xr-x 2 root root     4096 Apr 23 09:46 grub/
 -rw-r--r-- 1 root root    42392 Apr  8 16:20 pxelinux.0
 drwxr-xr-x 2 root root     4096 Jul 14 15:14 pxelinux.cfg/
 ```
+5. Установка и web-сервера apache2, необходимого для отдачи файлов по HTTP:
+```shell
+root@pxeserver:~# apt install apache2
+...
+```
+6. Скачивание образа Ubuntu 24:
+```shell
+root@pxeserver:~# mkdir /srv/images && cd /srv/images
+root@pxeserver:/srv/images# wget https://mirror.yandex.ru/ubuntu-releases/24.04/ubuntu-24.04-live-server-amd64.iso   
+```
+7. Подготовка страницы доступа к серверу TFTP:
+```shell
+root@pxeserver:~# nano /etc/apache2/sites-available/ks-server.conf
+...
+root@pxeserver:~# cat /etc/apache2/sites-available/ks-server.conf
+<VirtualHost 10.0.0.20:80>
+DocumentRoot /
+	<Directory /srv/ks>
+		Options Indexes MultiViews
+		AllowOverride All
+		Require all granted
+	</Directory>
+	<Directory /srv/images>
+		Options Indexes MultiViews
+		AllowOverride All
+		Require all granted	
+	</Directory>
+</VirtualHost>
+
+```
