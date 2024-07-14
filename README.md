@@ -1,1 +1,51 @@
-# 19_DZ
+# Установка и настройка DHCP, TFTP и PXE-загрузкчика.
+1. Настроить загрузку по сети дистрибутива Ubuntu 24;
+2. Установка производится из HTTP-репозитория;
+3. Настроить автоматическую установку с помощью файла user-data.
+### Исходные данные ###
+&ensp;&ensp;ПК на Linux c 8 ГБ ОЗУ или виртуальная машина (ВМ) с включенной Nested Virtualization.<br/>
+&ensp;&ensp;Предварительно установленное и настроенное ПО:<br/>
+&ensp;&ensp;&ensp;Hashicorp Vagrant (https://www.vagrantup.com/downloads);<br/>
+&ensp;&ensp;&ensp;Oracle VirtualBox (https://www.virtualbox.org/wiki/Linux_Downloads).<br/>
+&ensp;&ensp;&ensp;Ansible (https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html).<br/>
+&ensp;&ensp;Все действия проводились с использованием Vagrant 2.4.0, VirtualBox 7.0.18, Ansible 9.4.0 и образа ubuntu/jammy64 версии 20240301.0.0. <br/> 
+### Ход решения ###
+&ensp;&ensp;Для получения клиентом ip-адреса требуется DHCP-сервер, для получения файла pxelinux.0 необходима установка   TFTP-сервера. Для решения указанных задач необходимо установить утилиту dnsmasq, совмещающую в себе сразу оба сервера.
+1. Отключение файервола:
+```shell
+root@pxeserver:~# systemctl stop ufw
+root@pxeserver:~# systemctl disable ufw
+root@pxeserver:~# systemctl status ufw
+○ ufw.service - Uncomplicated firewall
+     Loaded: loaded (/lib/systemd/system/ufw.service; disabled; vendor preset: enabled)
+     Active: inactive (dead)
+       Docs: man:ufw(8)
+
+Jul 14 13:12:33 ubuntu systemd[1]: Starting Uncomplicated firewall...
+Jul 14 13:12:33 ubuntu systemd[1]: Finished Uncomplicated firewall.
+Jul 14 13:12:56 pxeserver systemd[1]: Stopping Uncomplicated firewall...
+Jul 14 13:12:56 pxeserver ufw-init[2104]: Skip stopping firewall: ufw (not enabled)
+Jul 14 13:12:56 pxeserver systemd[1]: ufw.service: Deactivated successfully.
+Jul 14 13:12:56 pxeserver systemd[1]: Stopped Uncomplicated firewall.
+```
+2. Установка утилиты dnsmasq:
+```shell
+root@pxeserver:~# apt update && apt install dnsmasq -y\
+...
+```
+3. Подготовка конфигурационного файла /etc/dnsmasq.d/pxe.conf:
+```shell
+root@pxeserver:~# nano /etc/dnsmasq.d/pxe.conf
+...
+root@pxeserver:~# cat /etc/dnsmasq.d/pxe.conf
+interface=enp0s8
+bind-interfaces
+dhcp-range=enp0s8, 10.0.0.100, 10.0.0.120
+dhcp-boot=pxelinux.0
+enable-tftp
+tftp-root=/srv/tftp/amd64
+```
+4. Создание каталога для TFTP-сервера, скачивание файла для сетевой установки и его распаковка:
+```shell
+
+```
