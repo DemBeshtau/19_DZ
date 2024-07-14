@@ -30,7 +30,7 @@ Jul 14 13:12:56 pxeserver systemd[1]: Stopped Uncomplicated firewall.
 ```
 2. Установка утилиты dnsmasq:
 ```shell
-root@pxeserver:~# apt update && apt install dnsmasq -y\
+root@pxeserver:~# apt update && apt install dnsmasq -y
 ...
 ```
 3. Подготовка конфигурационного файла /etc/dnsmasq.d/pxe.conf:
@@ -47,5 +47,19 @@ tftp-root=/srv/tftp/amd64
 ```
 4. Создание каталога для TFTP-сервера, скачивание файла для сетевой установки и его распаковка:
 ```shell
-
+root@pxeserver:~# mkdir /srv/tftp
+root@pxeserver:~# wget https://mirror.yandex.ru/ubuntu-releases/24.04/ubuntu-24.04-netboot-amd64.tar.gz
+root@pxeserver:~# tar -xzvf ubuntu-24.04-netboot-amd64.tar.gz -C /srv/ftp
+root@pxeserver:~# ll /srv/tftp/amd64
+total 85268
+drwxr-xr-x 4 root root     4096 Apr 23 09:46 ./
+drwxr-xr-x 3 root root     4096 Apr 23 09:46 ../
+-rw-r--r-- 1 root root   966664 Apr  4 12:39 bootx64.efi
+drwxr-xr-x 2 root root     4096 Apr 23 09:46 grub/
+-rw-r--r-- 1 root root  2340744 Apr  4 10:24 grubx64.efi
+-rw-r--r-- 1 root root 68889068 Apr 23 09:46 initrd
+-rw-r--r-- 1 root root   118676 Apr  8 16:20 ldlinux.c32
+-rw-r--r-- 1 root root 14928264 Apr 23 09:46 linux
+-rw-r--r-- 1 root root    42392 Apr  8 16:20 pxelinux.0
+drwxr-xr-x 2 root root     4096 Jul 14 15:14 pxelinux.cfg/
 ```
