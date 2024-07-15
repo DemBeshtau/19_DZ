@@ -1,0 +1,88 @@
+---
+- hosts: pxeserver
+  become: true
+  tasks:
+
+    - name: Disabling ufw service
+      systemd:
+        name: ufw
+        state: stopped
+        enabled: no
+
+    - name: Installing dnsmasq package
+      apt:
+        name: dnsmasq
+        update_cache: yes
+        state: present
+
+    - name: Configuring dnsmasq package
+      copy:
+        src: pxe.conf
+        dest: /etc/dnsmasq.d/pxe.conf
+        owner: root
+        group: root
+        mode: 0644    
+
+    - name: Installing apache webserver
+      apt:
+        name: apache2
+        state: present
+
+    - name: Copying configuration file to apache server
+      copy:
+        src: ks-server.conf
+        dest: /etc/apache2/sites-available/ks-server.conf
+        owner: root
+        group: root
+        mode: 0644 
+  
+    - name: Activating site on apache2 server
+      shell: a2ensite ks-server.conf
+
+    
+    - name: Creating necessary directories
+      file:
+        path: "{{ item.pth }}"
+        state: directory
+        mode: 0755
+      with_items:
+        - { pth: "/srv/images" }
+        - { pth: "/srv/ks" }
+        - { pth: "/srv/tftp" }
+
+    - name: Downloading OS image
+      get_url:
+        url: https://mirror.yandex.ru/ubuntu-releases/24.04/ubuntu-24.04-live-server-amd64.iso 
+        dest: /srv/images/ubuntu-24.04-live-server-amd64.iso 
+        force: yes 
+
+    - name: Downloading and unpacking netboot archive to /srv/tftp
+      unarchive:
+        src: https://mirror.yandex.ru/ubuntu-releases/24.04/ubuntu-24.04-netboot-amd64.tar.gz
+        dest: /srv/tftp
+        remote_src: yes
+
+    - name: Copying PXE-configuration files to source destination
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dst }}"
+        owner: root
+        group: root
+        mode: 0644
+      with_items:
+        - { src: "meta-data", dst: "/srv/ks/meta-data" }
+        - { src: "user-data", dst: "/srv/ks/user-data" }
+        - { src: "default", dst: "/srv/tftp/amd64/pxelinux.cfg/default" }
+    
+    - name: Restarting dnsmasq service
+      systemd:
+        name: dnsmasq
+        state: restarted
+        enabled: true
+
+    - name: Restarting apache webserver
+      systemd:
+        name: apache2
+        state: restarted
+        enabled: true
+...
